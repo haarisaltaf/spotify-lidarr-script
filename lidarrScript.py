@@ -3,12 +3,13 @@ This script is to grab all of the albums listed in the exportify csv file then p
 """
 import csv
 import requests
+import os
 
 # Constants
 # grab spotify data from exportify (output as csv)
 CSVFILE = input("Enter the CSV File location: ").strip()
 LIDARR_URI = "http://localhost:8686"
-API_KEY = "your_api_key_here"
+API_KEY = os.getenv("LIDARR_API_KEY")
 HEADERS = {"X-Api-Key": API_KEY}
 
 
@@ -31,10 +32,12 @@ def getArtistsFromCSV(CSV_DICT):
     artists = []
     for row in CSV_DICT:
         # adding both album and artist to list in format: [AlbumName, Artist1, artist2, etc.]
-        albumWithArtist = [
-            row['Album Name'].strip(), row['Artist Name(s)'].strip()]
-        if albumWithArtist not in artists:
-            artists.append(albumWithArtist)
+        albumRow = row['Artist Name(s)'].strip()
+        # now only grabbing the first (main) artist from the row
+        if "," in albumRow:
+            print(albumRow)
+        if albumRow not in artists:
+            artists.append(albumRow)
     return artists
 
 
@@ -80,13 +83,15 @@ def requestLidarrAlbums(album):
         update = requests.put(detailURL, headers=HEADERS, json=detail)
         update.raise_for_status()
 
-        print(f"✅ Album Monitored: {results['title']}, {
+        print(f"Album Monitored: {results['title']}, {
               results['artist']['artistName']}")
     else:
         print(f"Failed: {r.status_code}")
 
 
 def main():
+    ALBUMS = getArtistsFromCSV(CSVFILE)
+    return
     # Grabs albums from csv file, creates counter filled with the albums failed and successful
     ALBUMS = checkIfChange(list(getAlbumsFromCSV(CSVFILE)))
     counter = []
