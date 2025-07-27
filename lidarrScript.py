@@ -71,6 +71,7 @@ def checkIfChange(LIST):
     return LIST
 
 
+## TODO: CHANGE TO ARTIST
 def requestLidarrAlbums(album):
     requestURL = f"{LIDARR_URI}/api/v1/album/lookup?term={album}"
     r = requests.get(requestURL, headers=HEADERS)
