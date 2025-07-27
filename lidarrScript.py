@@ -13,7 +13,7 @@ API_KEY = os.getenv("LIDARR_API_KEY")
 HEADERS = {"X-Api-Key": API_KEY}
 
 
-def getAlbumsFromCSV(CSV_DICT):
+def getAlbumsFromCSV():
     """
     Script to return a set of albums from the Exportify csv.
     """
@@ -25,19 +25,22 @@ def getAlbumsFromCSV(CSV_DICT):
     return set(albums)
 
 
-def getArtistsFromCSV(CSV_DICT):
+def getArtistsFromCSV():
     """
     Script to return a set of albums from the Exportify csv.
     """
     artists = []
-    for row in CSV_DICT:
-        # adding both album and artist to list in format: [AlbumName, Artist1, artist2, etc.]
-        albumRow = row['Artist Name(s)'].strip()
-        # now only grabbing the first (main) artist from the row
-        if "," in albumRow:
-            print(albumRow)
-        if albumRow not in artists:
-            artists.append(albumRow)
+    with open(CSVFILE) as file:
+        CSV_DICT = csv.DictReader(file)
+        for row in CSV_DICT:
+            albumRow = row['Artist Name(s)'].strip()
+            # now only grabbing the first (main) artist from the row
+            if albumRow not in artists:
+                artists.append("Tyler, the Creator")
+                if "," in albumRow:
+                    artists.append(albumRow[:albumRow.index(",")])
+                else:
+                    artists.append(albumRow)
     return artists
 
 
@@ -90,24 +93,23 @@ def requestLidarrAlbums(album):
 
 
 def main():
-    ALBUMS = getArtistsFromCSV(CSVFILE)
-    return
+    ARTIST = set(getArtistsFromCSV())
+    print(f"{ARTIST}\n{len(ARTIST)}")
     # Grabs albums from csv file, creates counter filled with the albums failed and successful
-    ALBUMS = checkIfChange(list(getAlbumsFromCSV(CSVFILE)))
     counter = []
     failedCounter = []
-    for album in ALBUMS:
+    for artist in ARTIST:
         # requests lidarr to monitor album and adds to counter, if fails then prints exceptions
         try:
-            requestLidarrAlbums(album)
-            counter.append(album)
+            requestLidarrAlbums(artist)
+            counter.append(artist)
         except Exception as e:
-            failedCounter.append(album)
-            print(f"Error finding album {album}: {e}")
+            failedCounter.append(artist)
+            print(f"Error finding artist {artist}: {e}")
     # Prints stats
     # print(f"Albums Added: {counter}\n\n")
-    print(f"Total number of albums added: {len(counter)}")
-    print(f"FAILED Albums: {failedCounter}\n\nTotal Failed Albums: {
+    print(f"Total number of artists added: {len(counter)}")
+    print(f"FAILED aritsts: {failedCounter}\n\nTotal Failed artists: {
           len(failedCounter)}")
 
 
