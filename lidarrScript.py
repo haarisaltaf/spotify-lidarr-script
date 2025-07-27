@@ -72,6 +72,26 @@ def checkIfChange(LIST):
 
 
 ## TODO: CHANGE TO ARTIST
+def requestLidarrArtist(artist):
+    requestURL = f"{LIDARR_URI}/api/v1/artist/lookup?term={artist}"
+    r = requests.get(requestURL, headers=HEADERS)
+    if r.status_code == 200:
+        results = r.json()[0]
+        artistID = results['id']
+        # Get full album details
+        detailURL = f"{LIDARR_URI}/api/v1/artist/{artistID}"
+        detail = requests.get(detailURL, headers=HEADERS).json()
+        detail['monitored'] = True
+
+        # PUT update
+        update = requests.put(detailURL, headers=HEADERS, json=detail)
+        update.raise_for_status()
+
+        print(f"Artist Monitored: {results['title']}, {results['artist']['artistName']}")
+    else:
+        print(f"Failed: {r.status_code}")
+
+
 def requestLidarrAlbums(album):
     requestURL = f"{LIDARR_URI}/api/v1/album/lookup?term={album}"
     r = requests.get(requestURL, headers=HEADERS)
@@ -87,11 +107,9 @@ def requestLidarrAlbums(album):
         update = requests.put(detailURL, headers=HEADERS, json=detail)
         update.raise_for_status()
 
-        print(f"Album Monitored: {results['title']}, {
-              results['artist']['artistName']}")
+        print(f"Album Monitored: {results['title']}, {results['artist']['artistName']}")
     else:
         print(f"Failed: {r.status_code}")
-
 
 def main():
     ARTIST = set(getArtistsFromCSV())
@@ -102,7 +120,7 @@ def main():
     for artist in ARTIST:
         # requests lidarr to monitor album and adds to counter, if fails then prints exceptions
         try:
-            requestLidarrAlbums(artist)
+            requestLidarrArtist(artist)
             counter.append(artist)
         except Exception as e:
             failedCounter.append(artist)
@@ -110,8 +128,7 @@ def main():
     # Prints stats
     # print(f"Albums Added: {counter}\n\n")
     print(f"Total number of artists added: {len(counter)}")
-    print(f"FAILED aritsts: {failedCounter}\n\nTotal Failed artists: {
-          len(failedCounter)}")
+    print(f"FAILED aritsts: {failedCounter}\n\nTotal Failed artists: {len(failedCounter)}")
 
 
 if __name__ == "__main__":
